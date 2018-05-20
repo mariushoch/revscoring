@@ -14,17 +14,17 @@ Using a scorer_model to score a revision::
   import mwapi
   from revscoring import Model
   from revscoring.extractors.api.extractor import Extractor
- 
+
   with open("models/enwiki.damaging.linear_svc.model") as f:
        scorer_model = Model.load(f)
-  
+
   extractor = Extractor(mwapi.Session(host="https://en.wikipedia.org",
                                           user_agent="revscoring demo"))
-  
+
   feature_values = list(extractor.extract(123456789, scorer_model.features))
-  
+
   print(scorer_model.score(feature_values))
-  {'prediction': True, 'probability': {False: 0.4694409344514984, True: 0.5305590655485017}} 
+  {'prediction': True, 'probability': {False: 0.4694409344514984, True: 0.5305590655485017}}
   ```
 
 
@@ -41,9 +41,9 @@ dependencies in your operating system.
 
 ### Ubuntu & Debian:
   *  Run ``sudo apt-get install python3-dev g++ gfortran liblapack-dev libopenblas-dev``
-  *  Run ``apt-get install aspell-ar aspell-bn aspell-is myspell-cs myspell-nl myspell-en-us myspell-en-gb myspell-en-au myspell-et voikko-fi myspell-fr myspell-de-at myspell-de-ch myspell-de-de myspell-he myspell-hr myspell-hu aspell-id myspell-it myspell-nb myspell-fa aspell-pl myspell-pt myspell-es hunspell-sr aspell-sv aspell-ta myspell-ru myspell-uk hunspell-vi aspell-el myspell-lv aspell-ro myspell-ca`
+  *  Run ``apt-get install aspell-ar aspell-bn aspell-is myspell-cs myspell-nl myspell-en-us myspell-en-gb myspell-en-au myspell-et voikko-fi myspell-fr myspell-de-at myspell-de-ch myspell-de-de myspell-he myspell-hr myspell-hu aspell-id myspell-it myspell-nb myspell-fa aspell-pl myspell-pt myspell-es hunspell-sr aspell-sv aspell-ta myspell-ru myspell-uk hunspell-vi aspell-el myspell-lv aspell-ro myspell-ca hunspell-eu`
 ### Windows:
-<i>TODO</i> 
+<i>TODO</i>
 ### MacOS:
   Using Homebrew and pip, installing `revscoring` and `enchant` can be accomplished
   as follows::
@@ -76,6 +76,7 @@ You'll also need to install `enchant <https://en.wikipedia.org/wiki/Enchant_(sof
 dictionaries of the languages you'd like to use.  We recommend the following:
 
 * languages.arabic: aspell-ar
+* languages.basque: hunspell-eu
 * languages.bengali: aspell-bn
 * languages.bosnian: hunspell-bs
 * languages.catalan: myspell-ca
@@ -109,12 +110,12 @@ dictionaries of the languages you'd like to use.  We recommend the following:
 # Authors
 
   *   [Aaron Halfaker](http://halfaker.info)
-    
-    
+
+
   *   [Helder](https://github.com/he7d3r)
     
-    
+
   *   [Adam Roses Wight](https://mediawiki.org/wiki/User:Adamw)
     
-    
+
   *   [Amir Sarabadani](https://github.com/Ladsgroup)

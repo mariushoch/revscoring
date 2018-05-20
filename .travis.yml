@@ -51,6 +51,7 @@ addons:
     - myspell-lv
     - aspell-is
     - myspell-ca
+    - hunspell-eu
 
 before_install: {}
 install:
