@@ -13,8 +13,8 @@ class Diff(DependentSet):
     def __init__(self, name, revision_datasources):
         super().__init__(name)
 
-        self.revision_item = revision_datasources.item
-        self.parent_item = revision_datasources.parent.item
+        self.revision_entity = revision_datasources.entity
+        self.parent_entity = revision_datasources.parent.entity
 
         # sitelinks
         self.sitelinks_diff = Datasource(
@@ -63,21 +63,24 @@ class Diff(DependentSet):
          self.properties_changed) = \
             diff_parts(name + ".properties", self.properties_diff)
 
-        self.claims_added = Datasource(
-            name + ".claims_added", _process_claims_added,
-            depends_on=[self.properties_diff, self.parent_item,
-                        self.revision_item]
+        self.statements_added = Datasource(
+            name + ".statements_added", _process_statements_added,
+            depends_on=[self.properties_diff, self.parent_entity,
+                        self.revision_entity]
         )
-        self.claims_removed = Datasource(
-            name + ".claims_removed", _process_claims_removed,
-            depends_on=[self.properties_diff, self.parent_item,
-                        self.revision_item]
+        self.claims_added = self.statements_added  # Backwards compatible
+        self.statements_removed = Datasource(
+            name + ".statements_removed", _process_statements_removed,
+            depends_on=[self.properties_diff, self.parent_entity,
+                        self.revision_entity]
         )
-        self.claims_changed = Datasource(
-            name + ".claims_changed", _process_claims_changed,
-            depends_on=[self.properties_diff, self.parent_item,
-                        self.revision_item]
+        self.claims_removed = self.statements_removed  # Backwards compatible
+        self.statements_changed = Datasource(
+            name + ".statements_changed", _process_statements_changed,
+            depends_on=[self.properties_diff, self.parent_entity,
+                        self.revision_entity]
         )
+        self.claims_changed = self.statements_changed  # Backwards compatible
         self.sources_added = Datasource(
             name + ".sources_added", _process_sources_added,
             depends_on=[self.claims_changed]
@@ -134,44 +137,45 @@ class dict_diff_field(Datasource):
         return getattr(diff, self.field_name)
 
 
-def _process_claims_added(properties_diff, past_item, current_item):
-    claims_added = []
+def _process_statements_added(properties_diff, past_entity, current_entity):
+    statements_added = []
     for property in properties_diff.added:
-        claims_added += current_item.claims[property]
+        statements_added += current_entity.properties[property]
     for property in properties_diff.changed:
-        parent_guids = {claim.snak for claim in past_item.claims[property]}
-        for claim in current_item.claims[property]:
-            if claim.snak not in parent_guids:
-                claims_added.append(claim)
+        parent_guids = {statement.id for statement in past_entity.property[property]}
+        for statement in current_entity.properties[property]:
+            if statement.id not in parent_guids:
+                statements_added.append(statement)
 
-    return claims_added
+    return statements_added
 
 
-def _process_claims_removed(properties_diff, past_item, current_item):
-    claims_removed = []
-    for property in properties_diff.removed:
-        claims_removed += past_item.claims[property]
+def _process_statements_removed(properties_diff, past_entity, current_entity):
+    statements_removed = []
+    for statement in properties_diff.removed:
+        statements_removed += past_entity.properties[property]
+    for statement in properties_diff.changed:
+        current_guids = {statement.id
+                         for statement in past_entity.properties[property]}
+        for statement in past_entity.properties[property]:
+            if statement.id not in current_guids:
+                statements_removed.append(statement)
+
+    return statements_removed
+
+
+def _process_statements_changed(properties_diff, past_entity, current_entity):
+    statements_changed = []
     for property in properties_diff.changed:
-        current_guids = {claim.snak
-                         for claim in past_item.claims[property]}
-        for claim in past_item.claims[property]:
-            if claim.snak not in current_guids:
-                claims_removed.append(claim)
+        parent_guids = {statement.id: statement
+                        for statement in past_entity.properties[property]}
+        for new_statement in current_entity.properties[property]:
+            if new_statement.id in parent_guids and \
+               new_statement not in past_entity.properties[property]:
+                old_statement = parent_guids[new_statement.id]
+                statements_changed.append((old_statement, new_statement))
 
-    return claims_removed
-
-
-def _process_claims_changed(properties_diff, past_item, current_item):
-    claims_changed = []
-    for property in properties_diff.changed:
-        parent_guids = {claim.snak: claim
-                        for claim in past_item.claims[property]}
-        for claim in current_item.claims[property]:
-            if claim.snak in parent_guids and \
-               claim not in past_item.claims[property]:
-                claims_changed.append((parent_guids[claim.snak], claim))
-
-    return claims_changed
+    return statements_changed
 
 
 def _process_sources_added(claims_changed):
